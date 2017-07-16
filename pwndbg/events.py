@@ -12,11 +12,9 @@ from __future__ import unicode_literals
 
 import functools
 import sys
-import traceback
 
 import gdb
 
-import pwndbg.color
 import pwndbg.config
 import pwndbg.stdio
 
@@ -115,16 +113,15 @@ def connect(func, event_handler, name=''):
 
             objfile_cache.add(path)
 
-        if pause: return
-        with pwndbg.stdio.stdio:
-            try:
-                func()
-            except Exception as e:
-                msg = "Exception during func={}.{} {!r}".format(func.__module__, func.__name__, a)
-                msg = pwndbg.color.red(msg)
-                print(msg, file=sys.stderr)
-                traceback.print_exc()
-                raise e
+        if pause:
+            return
+
+        try:
+            func()
+        except Exception as e:
+            import pwndbg.exception
+            pwndbg.exception.handle()
+            raise e
 
     registered[event_handler].append(caller)
     event_handler.connect(caller)
